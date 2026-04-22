@@ -1,47 +1,43 @@
-import { supabase } from "./supabaseClient.js"
+import { supabase } from './supabaseClient.js'
 
-// LOGIN
-window.login = async function () {
+// 🔑 Obter role do utilizador
+export async function getUserRole(userId) {
+  if (!userId) return null
 
-  const email = document.getElementById("email").value
-  const password = document.getElementById("password").value
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: email,
-    password: password
-  })
-  if (error) {
-    alert("Login inválido")
-    console.error(error)
-    return
-  }
-  checkRole()
-}
-// VERIFICAR ROLE
-async function checkRole() {
-  const { data: { user } } = await supabase.auth.getUser()
   const { data, error } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
     .single()
-  if (error || !data) {
-    alert("Perfil não encontrado")
-    console.error(error)
+
+  if (error) {
+    console.error("Erro ao obter role:", error.message)
+    return null
+  }
+
+  return data.role
+}
+
+// 👤 Obter utilizador atual
+export async function getCurrentUser() {
+  const { data, error } = await supabase.auth.getUser()
+
+  if (error) {
+    console.error("Erro ao obter utilizador:", error.message)
+    return null
+  }
+
+  return data.user
+}
+
+// 🚪 Logout
+export async function logout() {
+  const { error } = await supabase.auth.signOut()
+
+  if (error) {
+    console.error("Erro no logout:", error.message)
     return
   }
-  if (data.role === "admin") {
-    window.location.href = "admin.html"
-  }
-  if (data.role === "funcionario") {
-    window.location.href = "funcionario.html"
-  }
-  if (data.role === "cliente") {
-    window.location.href = "cliente.html"
-  }
-}
-// LOGOUT
-window.logout = async function () {
-  await supabase.auth.signOut()
+
   window.location.href = "login.html"
 }
