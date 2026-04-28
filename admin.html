@@ -37,15 +37,27 @@ header {
 <header>Painel de Admin - TechFix</header>
 
 <div class="container">
-  <div class="card">Gerir utilizadores</div>
-  <div class="card">Ver todas as reparações</div>
-  <div class="card">Relatórios do sistema</div>
+  <div class="card" id="btnUsers">Gerir utilizadores</div>
+  <div class="card" id="btnRepairs">Ver todas as reparações</div>
+  <div class="card" id="btnReports">Relatórios do sistema</div>
 </div>
 
 <script type="module">
   import { checkUser } from './auth.js'
 
   checkUser("admin")
+
+  document.getElementById("btnUsers").addEventListener("click", () => {
+    window.location.href = "gerir-utilizadores.html"
+  })
+
+  document.getElementById("btnRepairs").addEventListener("click", () => {
+    window.location.href = "reparacoes.html"
+  })
+
+  document.getElementById("btnReports").addEventListener("click", () => {
+    window.location.href = "relatorios.html"
+  })
 </script>
 </body>
 </html>

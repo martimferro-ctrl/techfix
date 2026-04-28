@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerir Utilizadores</title>
+  <script type="module" src="gerir-utilizadores.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: linear-gradient(135deg, #2b0057, #6a00a8);
+      color: white;
+      padding: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+
+    button {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .delete {
+      background: red;
+      color: white;
+    }
+
+    .save {
+      background: green;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Gerir Utilizadores</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="users-table"></tbody>
+  </table>
+
+</body>
+</html>

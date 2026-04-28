@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient.js'
-import { checkUser } from './auth.js'
+import { getUserRole } from './auth.js'
 
 const form = document.getElementById("login-form")
 
@@ -9,7 +9,6 @@ form.addEventListener("submit", async (e) => {
   const email = document.getElementById("email").value
   const password = document.getElementById("password").value
 
-  // 1. Login
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password
@@ -20,29 +19,21 @@ form.addEventListener("submit", async (e) => {
     return
   }
 
-  // 2. Pega sessão atual
+  
   const { data: sessionData } = await supabase.auth.getSession()
   const user = sessionData.session.user
 
   console.log("USER:", user.id)
 
-  // 3. Vai buscar role diretamente (sem getUserRole)
-  const { data, error: roleError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (roleError || !data) {
-    alert("Erro ao obter role")
-    return
-  }
-
-  const role = data.role
+  const role = await getUserRole(user.id)
 
   console.log("ROLE:", role)
 
-  // 4. Redirect
+  if (!role) {
+    alert("Utilizador sem role")
+    return
+  }
+
   if (role === "admin") {
     window.location.href = "admin.html"
 

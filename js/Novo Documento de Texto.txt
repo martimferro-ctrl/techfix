@@ -1,0 +1,87 @@
+import { supabase } from './supabaseClient.js'
+import { getUserRole } from './auth.js'
+
+//PROTEGER PÁGINA
+const { data: { user } } = await supabase.auth.getUser()
+
+if (!user) {
+  window.location.href = "index.html"
+}
+
+const role = await getUserRole(user.id)
+
+if (role !== "admin") {
+  alert("Acesso negado")
+  window.location.href = "index.html"
+}
+
+//Buscar utilizadores
+async function loadUsers() {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+
+  if (error) {
+    console.error(error)
+    return
+  }
+
+  const table = document.getElementById("users-table")
+  table.innerHTML = ""
+
+  data.forEach(user => {
+    const row = document.createElement("tr")
+
+    row.innerHTML = `
+      <td>${user.email}</td>
+      <td>
+        <select id="role-${user.id}">
+          <option value="user" ${user.role === "user" ? "selected" : ""}>User</option>
+          <option value="admin" ${user.role === "admin" ? "selected" : ""}>Admin</option>
+        </select>
+      </td>
+      <td>
+        <button class="save" onclick="updateRole('${user.id}')">Guardar</button>
+        <button class="delete" onclick="deleteUser('${user.id}')">Apagar</button>
+      </td>
+    `
+
+    table.appendChild(row)
+  })
+}
+
+//Atualizar role
+window.updateRole = async (id) => {
+  const newRole = document.getElementById(`role-${id}`).value
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ role: newRole })
+    .eq('id', id)
+
+  if (error) {
+    alert("Erro ao atualizar")
+    console.error(error)
+  } else {
+    alert("Role atualizada")
+  }
+}
+
+//Apagar utilizador (apenas tabela profiles)
+window.deleteUser = async (id) => {
+  if (!confirm("Tens a certeza?")) return
+
+  const { error } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    alert("Erro ao apagar")
+  } else {
+    loadUsers()
+  }
+}
+
+// 🚀 Inicializar
+loadUsers()
