@@ -1,63 +1,160 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8">
-  <title>Gerir Utilizadores</title>
-  <script type="module" src="gerir-utilizadores.js"></script>
+<meta charset="UTF-8">
+<title>Gerir Utilizadores</title>
 
-  <style>
-    body {
-      font-family: Arial;
-      background: linear-gradient(135deg, #2b0057, #6a00a8);
-      color: white;
-      padding: 20px;
-    }
+<style>
+body {
+  font-family: Arial;
+  background: #1a1a2e;
+  color: white;
+  padding: 30px;
+}
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: rgba(255,255,255,0.1);
-      border-radius: 10px;
-      overflow: hidden;
-    }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #22223b;
+  border-radius: 8px;
+  overflow: hidden;
+}
 
-    th, td {
-      padding: 10px;
-      text-align: left;
-    }
+th, td {
+  padding: 12px;
+  text-align: left;
+}
 
-    button {
-      padding: 5px 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+th {
+  background: #2a2a40;
+}
 
-    .delete {
-      background: red;
-      color: white;
-    }
+tr:nth-child(even) {
+  background: #1f1f35;
+}
 
-    .save {
-      background: green;
-      color: white;
-    }
-  </style>
+button {
+  padding: 6px 10px;
+  margin-right: 5px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.delete {
+  background: #ff4d4d;
+  color: white;
+}
+
+.save {
+  background: #4da6ff;
+  color: white;
+}
+
+select {
+  padding: 5px;
+  border-radius: 5px;
+}
+</style>
 </head>
+
 <body>
 
-  <h1>Gerir Utilizadores</h1>
+<h1>Gerir Utilizadores</h1>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Email</th>
-        <th>Role</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody id="users-table"></tbody>
-  </table>
+<div id="status">A carregar...</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Email</th>
+      <th>Role</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody id="users"></tbody>
+</table>
+
+<script type="module">
+import { supabase } from "./js/supabaseClient.js";
+
+const table = document.getElementById("users");
+const status = document.getElementById("status");
+
+async function loadUsers() {
+  status.textContent = "A carregar utilizadores...";
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, email, role");
+
+  if (error) {
+    console.error(error);
+    status.textContent = "Erro ao carregar utilizadores";
+    return;
+  }
+
+  status.style.display = "none";
+
+  table.innerHTML = data.map(user => `
+    <tr>
+      <td>${user.email}</td>
+
+      <td>
+        <select id="role-${user.id}">
+          <option value="cliente" ${user.role === "cliente" ? "selected" : ""}>cliente</option>
+          <option value="admin" ${user.role === "admin" ? "selected" : ""}>admin</option>
+          <option value="funcionário" ${user.role === "funcionário" ? "selected" : ""}>funcionário</option>
+        </select>
+      </td>
+
+      <td>
+        <button class="save" onclick="updateRole('${user.id}')">Guardar</button>
+        <button class="delete" onclick="deleteUser('${user.id}')">Eliminar</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+window.updateRole = async function(id) {
+  const newRole = document.getElementById(`role-${id}`).value;
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ role: newRole })
+    .eq("id", id);
+
+  if (error) {
+    alert("Erro ao atualizar role");
+    console.error(error);
+    return;
+  }
+
+  alert("Role atualizada!");
+};
+
+window.deleteUser = async function(id) {
+  const confirmDelete = confirm("Tens a certeza que queres eliminar este utilizador?");
+
+  if (!confirmDelete) return;
+
+  const { error } = await supabase
+    .from("profiles")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert("Erro ao eliminar utilizador");
+    console.error(error);
+    return;
+  }
+
+  alert("Utilizador eliminado!");
+  loadUsers();
+};
+
+loadUsers();
+</script>
 
 </body>
 </html>

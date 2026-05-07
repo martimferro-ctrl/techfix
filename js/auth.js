@@ -1,7 +1,20 @@
 import { supabase } from "./supabaseClient.js"
 
-export async function checkUser(requiredRole) {
+export async function getUserRole(userId) {
+  const { data } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle()
 
+  if (!data) {
+    return null
+  }
+
+  return data.role
+}
+
+export async function checkUser(requiredRole) {
   const { data: sessionData } = await supabase.auth.getSession()
 
   if (!sessionData.session) {
@@ -10,14 +23,9 @@ export async function checkUser(requiredRole) {
   }
 
   const user = sessionData.session.user
+  const role = await getUserRole(user.id)
 
-  const { data } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle()
-
-  if (!data || data.role !== requiredRole) {
+  if (!role || role !== requiredRole) {
     window.location.href = "/cliente.html"
   }
 }
