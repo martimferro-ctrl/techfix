@@ -2,22 +2,442 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<title>Relatórios</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>TechFix - Relatórios</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
-body {
-  font-family: Arial;
-  background: #1a1a2e;
-  color: white;
-  padding: 20px;
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
 }
+
+body{
+  font-family:'Poppins',sans-serif;
+  min-height:100vh;
+  display:flex;
+  background:
+    linear-gradient(rgba(10,0,30,0.92), rgba(20,0,40,0.95)),
+    url('./images/fundo-techfix.png');
+  background-size:cover;
+  background-position:center;
+  color:white;
+  overflow:hidden;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+  width:260px;
+  height:100vh;
+  background:rgba(8,0,25,0.75);
+  backdrop-filter:blur(12px);
+  border-right:1px solid rgba(255,255,255,0.08);
+  padding:30px 20px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+
+.logo-area h1{
+  font-size:52px;
+  font-weight:700;
+  background:linear-gradient(to right,#ffffff,#d18cff);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.logo-area p{
+  color:#cfcfcf;
+  margin-top:5px;
+  font-size:15px;
+}
+
+.menu{
+  margin-top:50px;
+}
+
+.menu a{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:15px;
+  border-radius:14px;
+  margin-bottom:10px;
+  text-decoration:none;
+  color:white;
+  transition:0.25s;
+  font-size:16px;
+}
+
+.menu a:hover{
+  background:rgba(163,74,255,0.15);
+}
+
+.menu a.active{
+  background:linear-gradient(90deg,#6d28d9,#9333ea);
+  box-shadow:0 0 20px rgba(168,85,247,0.35);
+}
+
+.admin-box{
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  padding:15px;
+  border-radius:18px;
+}
+
+.admin-box h3{
+  font-size:16px;
+}
+
+.admin-box p{
+  color:#cfcfcf;
+  font-size:13px;
+}
+
+/* MAIN */
+
+.main{
+  flex:1;
+  padding:35px;
+  overflow-y:auto;
+}
+
+/* HEADER */
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:30px;
+  flex-wrap:wrap;
+  gap:20px;
+}
+
+.header-left h1{
+  font-size:42px;
+  margin-bottom:5px;
+}
+
+.header-left p{
+  color:#cfcfcf;
+}
+
+/* SEARCH */
+
+.actions{
+  display:flex;
+  gap:15px;
+  flex-wrap:wrap;
+}
+
+.search-box{
+  position:relative;
+}
+
+.search-box input{
+  width:320px;
+  padding:15px 20px;
+  border:none;
+  outline:none;
+  border-radius:16px;
+  background:rgba(255,255,255,0.05);
+  color:white;
+  font-size:15px;
+  border:1px solid rgba(255,255,255,0.08);
+  backdrop-filter:blur(10px);
+}
+
+.search-box input::placeholder{
+  color:#cfcfcf;
+}
+
+.clear-btn{
+  border:none;
+  padding:15px 25px;
+  border-radius:16px;
+  background:linear-gradient(90deg,#7c3aed,#c026d3);
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.25s;
+  box-shadow:0 0 20px rgba(168,85,247,0.35);
+}
+
+.clear-btn:hover{
+  transform:translateY(-2px);
+  opacity:0.9;
+}
+
+/* TABLE */
+
+.table-container{
+  background:rgba(15,0,40,0.45);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:24px;
+  overflow:hidden;
+  backdrop-filter:blur(14px);
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th{
+  text-align:left;
+  padding:22px;
+  color:#d8b4fe;
+  font-size:14px;
+  background:rgba(255,255,255,0.03);
+  text-transform:uppercase;
+}
+
+td{
+  padding:22px;
+  border-top:1px solid rgba(255,255,255,0.06);
+  color:#f1f1f1;
+}
+
+tr{
+  transition:0.2s;
+}
+
+tr:hover{
+  background:rgba(255,255,255,0.03);
+}
+
+.delete-btn{
+  border:none;
+  padding:10px 16px;
+  border-radius:12px;
+  background:linear-gradient(90deg,#dc2626,#ef4444);
+  color:white;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.delete-btn:hover{
+  opacity:0.85;
+}
+
+/* RESPONSIVO */
+
+@media(max-width:1100px){
+
+  body{
+    flex-direction:column;
+    overflow:auto;
+  }
+
+  .sidebar{
+    width:100%;
+    height:auto;
+  }
+
+  .header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .search-box input{
+    width:100%;
+  }
+
+}
+
 </style>
 </head>
 
 <body>
 
-<h1>Relatórios</h1>
-<p>Aqui vais meter gráficos e estatísticas depois.</p>
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+  <div>
+
+    <div class="logo-area">
+      <h1>TechFix</h1>
+      <p>Sistema de Gestão de Reparações</p>
+    </div>
+
+    <div class="menu">
+
+      <a href="dashboard.html">
+        Dashboard
+      </a>
+
+      <a href="reparacoes.html">
+        Reparações
+      </a>
+
+      <a href="gerir-utilizadores.html">
+        Utilizadores
+      </a>
+
+      <a href="relatorios.html" class="active">
+        Relatórios
+      </a>
+
+    </div>
+
+  </div>
+
+  <div class="admin-box">
+    <h3>Administrador</h3>
+    <p>Painel de Controlo</p>
+  </div>
+
+</div>
+
+<!-- MAIN -->
+
+<div class="main">
+
+  <div class="header">
+
+    <div class="header-left">
+      <h1>Relatórios do Sistema</h1>
+      <p>Histórico de atividades e ações realizadas no sistema.</p>
+    </div>
+
+    <div class="actions">
+
+      <div class="search-box">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Pesquisar logs..."
+        >
+      </div>
+
+      <button class="clear-btn" onclick="clearAllLogs()">
+        Limpar Logs
+      </button>
+
+    </div>
+
+  </div>
+
+  <div class="table-container">
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>Ação</th>
+          <th>Utilizador</th>
+          <th>Detalhes</th>
+          <th>Data</th>
+          <th>Apagar</th>
+        </tr>
+      </thead>
+
+      <tbody id="logsTable"></tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+<script type="module">
+
+import { getLogs, deleteLog, clearLogs } from './logs.js'
+
+const logsTable = document.getElementById("logsTable")
+const searchInput = document.getElementById("searchInput")
+
+let allLogs = []
+
+async function loadLogs(){
+
+  allLogs = await getLogs()
+
+  renderLogs(allLogs)
+}
+
+function renderLogs(logs){
+
+  logsTable.innerHTML = ""
+
+  logs.forEach(log => {
+
+    logsTable.innerHTML += `
+
+      <tr>
+
+        <td>${log.acao}</td>
+
+        <td>${log.utilizador || "-"}</td>
+
+        <td>${log.detalhes || "-"}</td>
+
+        <td>
+          ${new Date(log.data).toLocaleString()}
+        </td>
+
+        <td>
+          <button
+            class="delete-btn"
+            onclick="window.removeLog('${log.id}')"
+          >
+            Apagar
+          </button>
+        </td>
+
+      </tr>
+
+    `
+  })
+}
+
+window.removeLog = async function(id){
+
+  const confirmDelete = confirm("Queres apagar este log?")
+
+  if(!confirmDelete) return
+
+  await deleteLog(id)
+
+  loadLogs()
+}
+
+window.clearAllLogs = async function(){
+
+  const confirmClear = confirm("Queres apagar TODOS os logs?")
+
+  if(!confirmClear) return
+
+  await clearLogs()
+
+  loadLogs()
+}
+
+searchInput.addEventListener("input", () => {
+
+  const value = searchInput.value.toLowerCase()
+
+  const filtered = allLogs.filter(log =>
+
+    log.acao?.toLowerCase().includes(value) ||
+    log.utilizador?.toLowerCase().includes(value) ||
+    log.detalhes?.toLowerCase().includes(value)
+
+  )
+
+  renderLogs(filtered)
+})
+
+loadLogs()
+
+</script>
 
 </body>
 </html>

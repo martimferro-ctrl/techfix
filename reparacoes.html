@@ -1,23 +1,386 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-<meta charset="UTF-8">
-<title>Reparações</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechFix - Ver Reparações</title>
 
-<style>
-body {
-  font-family: Arial;
-  background: #1a1a2e;
-  color: white;
-  padding: 20px;
-}
-</style>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #12041c, #2b0a3d, #5d1896);
+      color: white;
+      min-height: 100vh;
+      padding: 30px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    h1 {
+      margin: 0 0 25px;
+      font-size: 30px;
+      text-align: center;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    input, select {
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.08);
+      color: white;
+      outline: none;
+      min-width: 220px;
+      transition: 0.2s;
+    }
+
+    option {
+      color: black;
+    }
+
+    button {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 12px;
+      background: #7b2cbf;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    .delete-btn {
+      background: #ff4d6d;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .modal-content {
+      width: 95%;
+      max-width: 600px;
+      background: #1c1028;
+      border-radius: 18px;
+      padding: 25px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .table-wrapper {
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.28);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: rgba(0,0,0,0.22);
+      padding: 15px;
+      text-align: left;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    td {
+      padding: 14px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 14px;
+    }
+
+    tr:hover {
+      background: rgba(255,255,255,0.03);
+    }
+
+    .estado {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+      background: rgba(157, 78, 221, 0.22);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: inline-block;
+    }
+
+    .vazio {
+      padding: 30px;
+      text-align: center;
+      opacity: 0.8;
+    }
+
+    @media (max-width: 900px) {
+      .table-wrapper {
+        overflow-x: auto;
+      }
+
+      table {
+        min-width: 900px;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-<h1>Reparações</h1>
-<p>Aqui vais listar todas as reparações.</p>
+  <div class="container">
+    <h1>Todas as Reparações</h1>
+
+    <div class="toolbar">
+
+      <button id="abrirModal">+ Nova Reparação</button>
+      <input type="text" id="pesquisa" placeholder="Pesquisar problema, marca ou modelo...">
+
+      <select id="filtro-estado">
+        <option value="">Todos os estados</option>
+        <option value="pendente">Pendente</option>
+        <option value="em_diagnostico">Em diagnóstico</option>
+        <option value="em_reparacao">Em reparação</option>
+        <option value="concluido">Concluído</option>
+        <option value="entregue">Entregue</option>
+      </select>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Problema</th>
+            <th>Diagnóstico</th>
+            <th>Equipamento</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Entrada</th>
+            <th>Conclusão</th>
+            <th>Valor</th>
+            <th>Estado</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-reparacoes"></tbody>
+      </table>
+
+      <div id="mensagem"></div>
+    </div>
+  </div>
+
+  <script type="module">
+  import { supabase } from './js/supabaseClient.js'
+
+  let reparacoes = []
+  let modal
+
+  window.addEventListener('DOMContentLoaded', () => {
+
+    modal = document.getElementById('modal')
+
+    document.getElementById('abrirModal').addEventListener('click', () => {
+      modal.style.display = 'flex'
+    })
+
+    document.getElementById('fecharModal').addEventListener('click', () => {
+      modal.style.display = 'none'
+    })
+
+    document.getElementById('pesquisa').addEventListener('input', aplicarFiltros)
+    document.getElementById('filtro-estado').addEventListener('change', aplicarFiltros)
+
+    document.getElementById('guardarReparacao').addEventListener('click', adicionarReparacao)
+
+    carregarReparacoes()
+  })
+
+  async function carregarReparacoes() {
+    const { data, error } = await supabase
+      .from('reparacoes')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error(error)
+      document.getElementById('mensagem').innerHTML =
+        '<div class="vazio">Erro ao carregar reparações.</div>'
+      return
+    }
+
+    reparacoes = data || []
+    renderizarTabela(reparacoes)
+  }
+
+  function renderizarTabela(lista) {
+    const tbody = document.getElementById('tabela-reparacoes')
+    const mensagem = document.getElementById('mensagem')
+
+    tbody.innerHTML = ''
+    mensagem.innerHTML = ''
+
+    if (lista.length === 0) {
+      mensagem.innerHTML = '<div class="vazio">Nenhuma reparação encontrada.</div>'
+      return
+    }
+
+    lista.forEach(rep => {
+      const tr = document.createElement('tr')
+
+      tr.innerHTML = `
+        <td>${rep.problema ?? '-'}</td>
+        <td>${rep.diagnostico ?? '-'}</td>
+        <td>${rep.equipamento ?? '-'}</td>
+        <td>${rep.marca ?? '-'}</td>
+        <td>${rep.modelo ?? '-'}</td>
+        <td>${rep.data_entrada ?? '-'}</td>
+        <td>${rep.data_conclusao ?? '-'}</td>
+        <td>${rep.valor ?? 0} €</td>
+        <td><span class="estado">${rep.estado ?? '-'}</span></td>
+        <td>
+          <button class="delete-btn" onclick="deleteRepair('${rep.id}')">Eliminar</button>
+        </td>
+      `
+
+      tbody.appendChild(tr)
+    })
+  }
+
+  function aplicarFiltros() {
+    const pesquisa = document.getElementById('pesquisa').value.toLowerCase()
+    const estado = document.getElementById('filtro-estado').value
+
+    const filtradas = reparacoes.filter(rep => {
+      const texto = `${rep.problema || ''} ${rep.diagnostico || ''} ${rep.marca || ''} ${rep.modelo || ''}`.toLowerCase()
+      return texto.includes(pesquisa) && (!estado || rep.estado === estado)
+    })
+
+    renderizarTabela(filtradas)
+  }
+
+  async function adicionarReparacao() {
+
+    const problema = document.getElementById('problema').value.trim()
+    const diagnostico = document.getElementById('diagnostico').value.trim()
+    const equipamento = document.getElementById('equipamento').value.trim()
+    const marca = document.getElementById('marca').value.trim()
+    const modelo = document.getElementById('modelo').value.trim()
+    const observacoes = document.getElementById('observacoes').value.trim()
+    const numero_serie = document.getElementById('numero_serie').value.trim()
+    const valor = document.getElementById('valor').value
+    const estado = document.getElementById('estado-modal').value
+    const prioridade = document.getElementById('prioridade').value
+
+    if (!problema) {
+      alert('Preenche o problema')
+      return
+    }
+
+    const { error } = await supabase
+      .from('reparacoes')
+      .insert([{
+        problema: problema,
+        diagnostico: diagnostico,
+        equipamento: equipamento,
+        marca: marca,
+        modelo: modelo,
+        observacoes: observacoes,
+        numero_serie: numero_serie,
+        valor: valor || 0,
+        estado: estado,
+        prioridade: prioridade,
+        data_entrada: new Date().toISOString()
+      }])
+
+    if (error) {
+      console.error(error)
+      alert('Erro ao guardar reparação')
+      return
+    }
+
+    alert('Reparação adicionada com sucesso!')
+
+    modal.style.display = 'none'
+    carregarReparacoes()
+  }
+
+  window.deleteRepair = async function(id) {
+
+  console.log("A tentar eliminar:", id)
+
+  const { error } = await supabase
+    .from('reparacoes')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error(error)
+    alert('Erro ao eliminar reparação')
+    return
+  }
+
+  alert('Reparação eliminada com sucesso!')
+  carregarReparacoes()
+}
+
+</script>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+
+      <h2>Nova Reparação</h2>
+
+      <input type="text" id="problema" placeholder="Problema">
+      <input type="text" id="diagnostico" placeholder="Diagnóstico">
+      <input type="text" id="equipamento" placeholder="Equipamento">
+      <input type="text" id="marca" placeholder="Marca">
+      <input type="text" id="modelo" placeholder="Modelo">
+      <input id="observacoes" placeholder="Observações">
+
+<input id="numero_serie" placeholder="Número de Série">
+
+<select id="prioridade">
+  <option value="baixa">Baixa</option>
+  <option value="normal" selected>Normal</option>
+  <option value="alta">Alta</option>
+  <option value="urgente">Urgente</option>
+</select>
+      <input type="number" id="valor" placeholder="Valor">
+
+      <select id="estado-modal">
+        <option value="pendente">Pendente</option>
+        <option value="em_diagnostico">Em diagnóstico</option>
+        <option value="em_reparacao">Em reparação</option>
+        <option value="concluido">Concluído</option>
+      </select>
+
+      <button id="guardarReparacao">Guardar Reparação</button>
+      <button id="fecharModal" class="delete-btn">Fechar</button>
+
+    </div>
+  </div>
+</body>
 
 </body>
 </html>

@@ -2,67 +2,170 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<title>Gerir Utilizadores</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TechFix - Gerir Utilizadores</title>
 
 <style>
-body {
-  font-family: Arial;
-  background: #1a1a2e;
-  color: white;
-  padding: 30px;
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #22223b;
-  border-radius: 8px;
-  overflow: hidden;
+body{
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #12041c, #2b0a3d, #5d1896);
+  color:white;
+  min-height:100vh;
+  padding:30px;
 }
 
-th, td {
-  padding: 12px;
-  text-align: left;
+.container{
+  max-width:1200px;
+  margin:auto;
 }
 
-th {
-  background: #2a2a40;
+h1{
+  text-align:center;
+  margin-bottom:25px;
+  font-size:32px;
 }
 
-tr:nth-child(even) {
-  background: #1f1f35;
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+  gap:15px;
+  flex-wrap:wrap;
 }
 
-button {
-  padding: 6px 10px;
-  margin-right: 5px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+.search{
+  flex:1;
+  min-width:250px;
 }
 
-.delete {
-  background: #ff4d4d;
-  color: white;
+.search input{
+  width:100%;
+  padding:12px 15px;
+  border:none;
+  border-radius:12px;
+  background:rgba(255,255,255,0.08);
+  color:white;
+  outline:none;
+  border:1px solid rgba(255,255,255,0.08);
 }
 
-.save {
-  background: #4da6ff;
-  color: white;
+.search input::placeholder{
+  color:rgba(255,255,255,0.6);
 }
 
-select {
-  padding: 5px;
-  border-radius: 5px;
+.table-wrapper{
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(10px);
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 12px 30px rgba(0,0,0,0.3);
 }
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th{
+  background:rgba(0,0,0,0.25);
+  padding:16px;
+  text-align:left;
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+
+td{
+  padding:16px;
+  border-top:1px solid rgba(255,255,255,0.06);
+}
+
+tr:hover{
+  background:rgba(255,255,255,0.03);
+}
+
+select{
+  padding:8px 10px;
+  border:none;
+  border-radius:10px;
+  background:rgba(255,255,255,0.08);
+  color:white;
+  outline:none;
+}
+
+option{
+  color:black;
+}
+
+button{
+  padding:9px 14px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  transition:0.2s;
+  font-weight:bold;
+}
+
+button:hover{
+  transform:translateY(-1px);
+}
+
+.delete{
+  background:#ff4d6d;
+  color:white;
+}
+
+.save{
+  background:#7b2cbf;
+  color:white;
+}
+
+#status{
+  margin-bottom:15px;
+  opacity:0.8;
+}
+
+@media(max-width:900px){
+
+  .table-wrapper{
+    overflow-x:auto;
+  }
+
+  table{
+    min-width:800px;
+  }
+
+}
+
 </style>
 </head>
 
 <body>
 
+<div class="container">
+
 <h1>Gerir Utilizadores</h1>
 
+<div class="topbar">
+
+  <div class="search">
+    <input type="text" id="searchInput" placeholder="Pesquisar utilizador...">
+  </div>
+
+</div>
+
 <div id="status">A carregar...</div>
+
+<div class="table-wrapper">
 
 <table>
   <thead>
@@ -72,16 +175,26 @@ select {
       <th>Ações</th>
     </tr>
   </thead>
+
   <tbody id="users"></tbody>
 </table>
 
+</div>
+
+</div>
+
 <script type="module">
+
 import { supabase } from "./js/supabaseClient.js";
 
 const table = document.getElementById("users");
 const status = document.getElementById("status");
+const searchInput = document.getElementById("searchInput");
+
+let usersData = [];
 
 async function loadUsers() {
+
   status.textContent = "A carregar utilizadores...";
 
   const { data, error } = await supabase
@@ -94,29 +207,58 @@ async function loadUsers() {
     return;
   }
 
-  status.style.display = "none";
+  usersData = data;
+  renderUsers(usersData);
 
-  table.innerHTML = data.map(user => `
+  status.style.display = "none";
+}
+
+function renderUsers(users){
+
+  table.innerHTML = users.map(user => `
     <tr>
+
       <td>${user.email}</td>
 
       <td>
         <select id="role-${user.id}">
           <option value="cliente" ${user.role === "cliente" ? "selected" : ""}>cliente</option>
+
           <option value="admin" ${user.role === "admin" ? "selected" : ""}>admin</option>
-          <option value="funcionário" ${user.role === "funcionário" ? "selected" : ""}>funcionário</option>
+
+          <option value="funcionario" ${user.role === "funcionario" ? "selected" : ""}>funcionário</option>
         </select>
       </td>
 
       <td>
-        <button class="save" onclick="updateRole('${user.id}')">Guardar</button>
-        <button class="delete" onclick="deleteUser('${user.id}')">Eliminar</button>
+        <button class="save" onclick="updateRole('${user.id}')">
+          Guardar
+        </button>
+
+        <button class="delete" onclick="deleteUser('${user.id}')">
+          Eliminar
+        </button>
       </td>
+
     </tr>
   `).join("");
+
 }
 
+searchInput.addEventListener("input", () => {
+
+  const value = searchInput.value.toLowerCase();
+
+  const filtered = usersData.filter(user =>
+    user.email.toLowerCase().includes(value)
+  );
+
+  renderUsers(filtered);
+
+});
+
 window.updateRole = async function(id) {
+
   const newRole = document.getElementById(`role-${id}`).value;
 
   const { error } = await supabase
@@ -131,9 +273,11 @@ window.updateRole = async function(id) {
   }
 
   alert("Role atualizada!");
+
 };
 
 window.deleteUser = async function(id) {
+
   const confirmDelete = confirm("Tens a certeza que queres eliminar este utilizador?");
 
   if (!confirmDelete) return;
@@ -150,10 +294,13 @@ window.deleteUser = async function(id) {
   }
 
   alert("Utilizador eliminado!");
+
   loadUsers();
+
 };
 
 loadUsers();
+
 </script>
 
 </body>
