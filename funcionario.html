@@ -2,50 +2,132 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>TechFix - Funcionário</title>
 
 <style>
-body {
+* {
   margin: 0;
-  font-family: Arial;
-  background: linear-gradient(135deg, #2b0a3d, #6a0dad);
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #12041c, #2b0a3d, #5d1896);
   color: white;
 }
 
 header {
-  padding: 20px;
   text-align: center;
-  font-size: 24px;
-  background: rgba(0,0,0,0.2);
+  padding: 45px 20px 25px;
+}
+
+.logo {
+  font-size: 48px;
+  font-weight: bold;
+  color: #d8b4fe;
+}
+
+.subtitulo {
+  margin-top: 8px;
+  color: #d1c4e9;
+  font-size: 18px;
 }
 
 .container {
-  padding: 30px;
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 22px;
 }
 
 .card {
-  background: rgba(255,255,255,0.1);
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 15px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  padding: 35px 25px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  background: rgba(168,85,247,0.14);
+  border-color: rgba(168,85,247,0.4);
+}
+
+.card h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+  color: #f3e8ff;
+}
+
+.card p {
+  color: #d1c4e9;
+  line-height: 1.5;
+}
+
+footer {
+  text-align: center;
+  padding: 25px;
+  color: #b39ddb;
+  font-size: 14px;
+}
+
+@media(max-width: 700px) {
+  .logo {
+    font-size: 40px;
+  }
+
+  .container {
+    margin-top: 15px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<header>Painel do Funcionário - TechFix</header>
+<header>
+  <div class="logo">TechFix</div>
+  <div class="subtitulo">Painel do Funcionário</div>
+</header>
 
 <div class="container">
-  <div class="card">Registar nova reparação</div>
-  <div class="card">Atualizar estado</div>
-  <div class="card">Lista de equipamentos</div>
+
+  <div class="card" onclick="window.location.href='reparacoes.html'">
+    <h2>Registar nova reparação</h2>
+    <p>Criar uma nova ficha de reparação para um equipamento.</p>
+  </div>
+
+  <div class="card" onclick="window.location.href='atualizar-estado.html'">
+    <h2>Atualizar estado</h2>
+    <p>Alterar o estado atual das reparações em andamento.</p>
+  </div>
+
+  <div class="card" onclick="window.location.href='equipamentos.html'">
+    <h2>Lista de equipamentos</h2>
+    <p>Consultar todos os equipamentos registados no sistema.</p>
+  </div>
+
 </div>
 
-<script type="module">
-  import { checkUser } from './auth.js'
+<footer>
+  Sistema de Gestão de Reparações
+</footer>
 
-  checkUser("funcionario")
+<script type="module">
+import { checkUser } from './js/auth.js'
+
+checkUser("funcionario")
 </script>
+
 </body>
 </html>

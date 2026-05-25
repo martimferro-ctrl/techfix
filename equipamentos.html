@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Equipamentos - TechFix</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: linear-gradient(135deg, #2b0a3d, #6a0dad);
+  color: white;
+}
+
+header {
+  padding: 20px;
+  text-align: center;
+  font-size: 24px;
+  background: rgba(0,0,0,0.2);
+}
+
+.container {
+  padding: 30px;
+}
+
+.card {
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+button {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: #8e24aa;
+  color: white;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+button:hover {
+  background: #b23be0;
+}
+</style>
+</head>
+
+<body>
+
+<header>Lista de Equipamentos</header>
+
+<div class="container">
+  <button onclick="window.location.href='funcionario.html'">Voltar</button>
+
+  <div id="listaEquipamentos"></div>
+</div>
+
+<script type="module">
+import { supabase } from './js/supabaseClient.js'
+import { checkUser } from './js/auth.js'
+
+checkUser("funcionario")
+
+const lista = document.getElementById("listaEquipamentos")
+
+async function carregarEquipamentos() {
+  const { data, error } = await supabase
+    .from("reparacoes")
+    .select("*")
+    .order("data_entrada", { ascending: false })
+
+  if (error) {
+    console.error(error)
+    lista.innerHTML = "<p>Erro ao carregar equipamentos.</p>"
+    return
+  }
+
+  lista.innerHTML = ""
+
+  data.forEach(rep => {
+    lista.innerHTML += `
+      <div class="card">
+        <h3>${rep.equipamento || "Equipamento sem nome"}</h3>
+        <p><strong>Marca:</strong> ${rep.marca || "Sem marca"}</p>
+        <p><strong>Modelo:</strong> ${rep.modelo || "Sem modelo"}</p>
+        <p><strong>Número de série:</strong> ${rep.numero_serie || "Não indicado"}</p>
+        <p><strong>Estado:</strong> ${rep.estado || "Sem estado"}</p>
+        <p><strong>Problema:</strong> ${rep.problema || "Sem descrição"}</p>
+      </div>
+    `
+  })
+}
+
+carregarEquipamentos()
+</script>
+
+</body>
+</html>

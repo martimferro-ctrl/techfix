@@ -2,50 +2,177 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>TechFix - Cliente</title>
 
 <style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: linear-gradient(135deg, #2b0a3d, #6a0dad);
-  color: white;
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Segoe UI', sans-serif;
 }
 
-header {
-  padding: 20px;
-  text-align: center;
-  font-size: 24px;
-  background: rgba(0,0,0,0.2);
+body{
+  min-height:100vh;
+  background:
+  linear-gradient(rgba(15,0,30,0.88), rgba(15,0,30,0.92)),
+  url("fundo-techfix.png");
+
+  background-size:cover;
+  background-position:center;
+  color:white;
 }
 
-.container {
-  padding: 30px;
+header{
+  padding:35px 20px;
+  text-align:center;
 }
 
-.card {
-  background: rgba(255,255,255,0.1);
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 15px;
+.logo{
+  font-size:55px;
+  font-weight:bold;
+  color:#d8b4fe;
 }
+
+.subtitulo{
+  margin-top:8px;
+  color:#d1c4e9;
+  font-size:18px;
+}
+
+.container{
+  max-width:1000px;
+  margin:40px auto;
+  padding:20px;
+
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+
+  backdrop-filter:blur(10px);
+
+  padding:35px 25px;
+
+  border-radius:18px;
+
+  transition:0.3s;
+
+  cursor:pointer;
+}
+
+.card:hover{
+  transform:translateY(-5px);
+
+  background:rgba(168,85,247,0.12);
+
+  border:1px solid rgba(168,85,247,0.3);
+}
+
+.card h2{
+  font-size:22px;
+  margin-bottom:15px;
+  color:#f3e8ff;
+}
+
+.card p{
+  color:#d1c4e9;
+  line-height:1.5;
+}
+
+footer{
+  text-align:center;
+  padding:20px;
+  color:#b39ddb;
+  font-size:14px;
+}
+
+@media(max-width:700px){
+
+  .logo{
+    font-size:42px;
+  }
+
+}
+
 </style>
 </head>
 
 <body>
 
-<header>Área do Cliente - TechFix</header>
+<header>
+
+  <div class="logo">
+    TechFix
+  </div>
+
+  <div class="subtitulo">
+    Área do Cliente
+  </div>
+
+</header>
 
 <div class="container">
-  <div class="card">Ver estado da reparação</div>
-  <div class="card">Histórico de pedidos</div>
-  <div class="card">Contactar suporte</div>
+
+  <div class="card"
+       onclick="window.location.href='ver-estado.html'">
+
+    <h2>
+      Ver estado da reparação
+    </h2>
+
+    <p>
+      Consulta o estado atual do teu equipamento.
+    </p>
+
+  </div>
+
+  <div class="card"
+       onclick="window.location.href='historico-pedidos.html'">
+
+    <h2>
+      Histórico de pedidos
+    </h2>
+
+    <p>
+      Visualiza todas as reparações anteriores.
+    </p>
+
+  </div>
+
+  <div class="card"
+       onclick="window.location.href='contactar-suporte.html'">
+
+    <h2>
+      Contactar suporte
+    </h2>
+
+    <p>
+      Entra em contacto com a equipa TechFix.
+    </p>
+
+  </div>
+
 </div>
 
-<script type="module">
-  import { checkUser } from './auth.js'
+<footer>
+  Sistema de Gestão de Reparações
+</footer>
 
-  checkUser("cliente")
+<script type="module">
+
+import { checkUser } from './js/auth.js'
+
+checkUser("cliente")
+
 </script>
+
 </body>
 </html>

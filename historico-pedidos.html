@@ -1,0 +1,122 @@
+<!-- historico-pedidos.html -->
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>TechFix - Histórico</title>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial;
+}
+
+body{
+  min-height:100vh;
+  background:
+  linear-gradient(rgba(15,0,30,0.9), rgba(15,0,30,0.9)),
+  url("fundo-techfix.png");
+  background-size:cover;
+  background-position:center;
+  padding:40px;
+  color:white;
+}
+
+.logo{
+  text-align:center;
+  font-size:50px;
+  color:#d8b4fe;
+  margin-bottom:10px;
+  font-weight:bold;
+}
+
+.sub{
+  text-align:center;
+  margin-bottom:40px;
+}
+
+.lista{
+  max-width:900px;
+  margin:auto;
+}
+
+.card{
+  background:rgba(255,255,255,0.05);
+  border-radius:15px;
+  padding:20px;
+  margin-bottom:20px;
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.08);
+}
+
+.estado{
+  color:#c084fc;
+  font-weight:bold;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="logo">TechFix</div>
+<div class="sub">Histórico de Pedidos</div>
+
+<div class="lista" id="lista"></div>
+
+<script type="module">
+import { supabase } from "./supabaseClient.js"
+import { checkUser } from "./auth.js"
+
+checkUser("cliente")
+
+async function carregarHistorico() {
+  const { data: sessionData } = await supabase.auth.getSession()
+
+  if (!sessionData.session) {
+    window.location.href = "login.html"
+    return
+  }
+
+  const user = sessionData.session.user
+
+  const { data, error } = await supabase
+    .from("reparacoes")
+    .select("*")
+    .eq("cliente_id", user.id)
+    .order("created_at", { ascending: false })
+
+  const lista = document.getElementById("lista")
+
+  if (error) {
+    lista.innerHTML = "<p>Erro ao carregar histórico.</p>"
+    console.error(error)
+    return
+  }
+
+  if (!data || data.length === 0) {
+    lista.innerHTML = "<p>Ainda não tens reparações registadas.</p>"
+    return
+  }
+
+  lista.innerHTML = data.map(rep => `
+    <div class="card">
+      <h2>${rep.equipamento || "Equipamento"}</h2>
+      <p><strong>Marca:</strong> ${rep.marca || "Não definido"}</p>
+      <p><strong>Modelo:</strong> ${rep.modelo || "Não definido"}</p>
+      <p><strong>Estado:</strong> ${rep.estado || "Sem estado"}</p>
+      <p><strong>Problema:</strong> ${rep.problema || "Sem descrição"}</p>
+    </div>
+  `).join("")
+}
+
+carregarHistorico()
+</script>
+
+</body>
+</html>

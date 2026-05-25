@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>TechFix - Estado da Reparação</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    linear-gradient(rgba(15,0,30,0.9), rgba(15,0,30,0.92)),
+    url("fundo-techfix.png");
+  background-size: cover;
+  background-position: center;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.container {
+  width: 100%;
+  max-width: 550px;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 0 30px rgba(168,85,247,0.3);
+}
+
+.logo {
+  text-align: center;
+  font-size: 50px;
+  font-weight: bold;
+  color: #d8b4fe;
+  margin-bottom: 8px;
+}
+
+.sub {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #d1c4e9;
+}
+
+input {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: #1e1033;
+  color: white;
+  margin-bottom: 15px;
+  font-size: 15px;
+}
+
+input:focus {
+  outline: 2px solid #9333ea;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: #9333ea;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+  margin-bottom: 10px;
+}
+
+button:hover {
+  background: #a855f7;
+}
+
+.btn-voltar {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.btn-voltar:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.resultado {
+  margin-top: 20px;
+  background: rgba(255,255,255,0.06);
+  padding: 18px;
+  border-radius: 12px;
+  line-height: 1.7;
+}
+
+.resultado p {
+  margin-bottom: 8px;
+  color: #f3e8ff;
+}
+
+.estado {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+  margin-left: 5px;
+}
+
+.estado-recebido {
+  background: gray;
+  color: white;
+}
+
+.estado-diagnostico {
+  background: #3498db;
+  color: white;
+}
+
+.estado-reparacao {
+  background: #f1c40f;
+  color: black;
+}
+
+.estado-pecas {
+  background: orange;
+  color: black;
+}
+
+.estado-concluido {
+  background: #2ecc71;
+  color: white;
+}
+
+.estado-entregue {
+  background: #27ae60;
+  color: white;
+}
+
+.estado-cancelado {
+  background: #e74c3c;
+  color: white;
+}
+
+.erro {
+  color: #ffb4b4;
+}
+
+.sucesso {
+  color: #b9fbc0;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="logo">TechFix</div>
+
+  <div class="sub">
+    Consulta o estado da tua reparação
+  </div>
+
+  <input 
+    type="text" 
+    id="codigo" 
+    placeholder="Escreve o código da reparação. Ex: TFX-001"
+  >
+
+  <button id="btnConsultar">
+    Consultar Reparação
+  </button>
+
+  <button class="btn-voltar" onclick="window.location.href='cliente.html'">
+    Voltar
+  </button>
+
+  <div class="resultado" id="resultado">
+    <p>Insere o código da reparação para consultar o estado.</p>
+  </div>
+
+</div>
+
+<script type="module">
+import { supabase } from "./js/supabaseClient.js"
+import { checkUser } from "./js/auth.js"
+
+checkUser("cliente")
+
+const btnConsultar = document.getElementById("btnConsultar")
+const inputCodigo = document.getElementById("codigo")
+const resultado = document.getElementById("resultado")
+
+function classeEstado(estado) {
+  if (estado === "Recebido") return "estado-recebido"
+  if (estado === "Em diagnóstico") return "estado-diagnostico"
+  if (estado === "Em reparação") return "estado-reparacao"
+  if (estado === "A aguardar peças") return "estado-pecas"
+  if (estado === "Concluído") return "estado-concluido"
+  if (estado === "Entregue") return "estado-entregue"
+  if (estado === "Cancelado") return "estado-cancelado"
+
+  return "estado-recebido"
+}
+
+btnConsultar.addEventListener("click", async () => {
+  const codigo = inputCodigo.value.trim().toUpperCase()
+
+  if (!codigo) {
+    resultado.innerHTML = `<p class="erro">Escreve o código da reparação.</p>`
+    return
+  }
+
+  resultado.innerHTML = `<p>A procurar reparação...</p>`
+
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+
+  if (sessionError || !sessionData.session) {
+    window.location.href = "login.html"
+    return
+  }
+
+  const user = sessionData.session.user
+
+  const { data, error } = await supabase
+    .from("reparacoes")
+    .select("*")
+    .eq("codigo", codigo)
+    .maybeSingle()
+
+  if (error) {
+    console.error(error)
+    resultado.innerHTML = `<p class="erro">Erro ao procurar reparação.</p>`
+    return
+  }
+
+  if (!data) {
+    resultado.innerHTML = `
+      <p class="erro">Nenhuma reparação encontrada com esse código.</p>
+      <p>Confirma se escreveste o código corretamente.</p>
+    `
+    return
+  }
+
+  const estadoAtual = data.estado || "Sem estado"
+
+  resultado.innerHTML = `
+    <p class="sucesso"><strong>Reparação encontrada!</strong></p>
+
+    <p><strong>Código:</strong> ${data.codigo || "Sem código"}</p>
+
+    <p><strong>Equipamento:</strong> ${data.equipamento || "Não definido"}</p>
+
+    <p><strong>Marca:</strong> ${data.marca || "Não definida"}</p>
+
+    <p><strong>Modelo:</strong> ${data.modelo || "Não definido"}</p>
+
+    <p>
+      <strong>Estado:</strong>
+      <span class="estado ${classeEstado(estadoAtual)}">
+        ${estadoAtual}
+      </span>
+    </p>
+
+    <p><strong>Problema:</strong> ${data.problema || "Sem descrição"}</p>
+
+    <p><strong>Observações:</strong> ${data.observacoes || "Sem observações"}</p>
+
+    <p><strong>Valor:</strong> ${data.valor ? data.valor + "€" : "Ainda não definido"}</p>
+
+    <p><strong>Data de entrada:</strong> ${data.data_entrada || "Sem data"}</p>
+  `
+})
+</script>
+
+</body>
+</html>

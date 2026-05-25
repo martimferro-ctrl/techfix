@@ -1,0 +1,163 @@
+<!-- contactar-suporte.html -->
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>TechFix - Suporte</title>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial;
+}
+
+body{
+  min-height:100vh;
+  background:
+  linear-gradient(rgba(15,0,30,0.9), rgba(15,0,30,0.9)),
+  url("fundo-techfix.png");
+  background-size:cover;
+  background-position:center;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:white;
+}
+
+.container{
+  width:90%;
+  max-width:600px;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(10px);
+  border-radius:20px;
+  padding:30px;
+  border:1px solid rgba(255,255,255,0.08);
+}
+
+.logo{
+  text-align:center;
+  font-size:50px;
+  color:#d8b4fe;
+  margin-bottom:10px;
+  font-weight:bold;
+}
+
+.sub{
+  text-align:center;
+  margin-bottom:30px;
+}
+
+input, textarea{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:10px;
+  background:#1e1033;
+  color:white;
+  margin-bottom:20px;
+}
+
+textarea{
+  min-height:150px;
+  resize:none;
+}
+
+button{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:10px;
+  background:#9333ea;
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  background:#a855f7;
+}
+
+.status{
+  margin-top:20px;
+  text-align:center;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="logo">TechFix</div>
+  <div class="sub">Contactar Suporte</div>
+
+  <input type="text" id="assunto" placeholder="Assunto">
+
+  <textarea id="mensagem" placeholder="Escreve aqui a tua mensagem..."></textarea>
+
+  <button id="btnEnviar">
+    Enviar Mensagem
+  </button>
+
+  <div class="status" id="status"></div>
+
+</div>
+
+<script type="module">
+import { supabase } from "./supabaseClient.js"
+import { checkUser } from "./auth.js"
+
+checkUser("cliente")
+
+document.getElementById("btnEnviar").addEventListener("click", async () => {
+  const assunto = document.getElementById("assunto").value.trim()
+  const mensagem = document.getElementById("mensagem").value.trim()
+  const status = document.getElementById("status")
+
+  if (!assunto || !mensagem) {
+    status.innerHTML = "Preenche todos os campos."
+    return
+  }
+
+  const { data: sessionData } = await supabase.auth.getSession()
+
+  if (!sessionData.session) {
+    window.location.href = "login.html"
+    return
+  }
+
+  const user = sessionData.session.user
+
+  const { error } = await supabase
+    .from("suporte")
+    .insert([
+      {
+        cliente_id: user.id,
+        assunto: assunto,
+        mensagem: mensagem,
+        estado: "aberto"
+      }
+    ])
+
+  if (error) {
+    status.innerHTML = "Erro ao enviar mensagem."
+    console.error(error)
+    return
+  }
+
+  status.innerHTML = "Mensagem enviada com sucesso."
+
+  document.getElementById("assunto").value = ""
+  document.getElementById("mensagem").value = ""
+})
+</script>
+
+</body>
+</html>

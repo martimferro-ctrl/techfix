@@ -171,6 +171,7 @@
       <table>
         <thead>
           <tr>
+            <th>Código</th>
             <th>Problema</th>
             <th>Diagnóstico</th>
             <th>Equipamento</th>
@@ -249,6 +250,7 @@
       const tr = document.createElement('tr')
 
       tr.innerHTML = `
+        <td>${rep.codigo ?? '-'}</td>
         <td>${rep.problema ?? '-'}</td>
         <td>${rep.diagnostico ?? '-'}</td>
         <td>${rep.equipamento ?? '-'}</td>
@@ -259,7 +261,9 @@
         <td>${rep.valor ?? 0} €</td>
         <td><span class="estado">${rep.estado ?? '-'}</span></td>
         <td>
-          <button class="delete-btn" onclick="deleteRepair('${rep.id}')">Eliminar</button>
+          <button class="delete-btn" onclick="deleteRepair('${rep.id}')">
+            Eliminar
+          </button>
         </td>
       `
 
@@ -291,6 +295,7 @@
     const valor = document.getElementById('valor').value
     const estado = document.getElementById('estado-modal').value
     const prioridade = document.getElementById('prioridade').value
+    const codigo = "TFX-" + Math.floor(1000 + Math.random() * 9000)
 
     if (!problema) {
       alert('Preenche o problema')
@@ -300,6 +305,7 @@
     const { error } = await supabase
       .from('reparacoes')
       .insert([{
+        codigo: codigo,
         problema: problema,
         diagnostico: diagnostico,
         equipamento: equipamento,

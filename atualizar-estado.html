@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Atualizar Estado - TechFix</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: linear-gradient(135deg, #2b0a3d, #6a0dad);
+  color: white;
+}
+
+header {
+  padding: 20px;
+  text-align: center;
+  font-size: 24px;
+  background: rgba(0,0,0,0.2);
+}
+
+.container {
+  padding: 30px;
+}
+
+.card {
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+select, button {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  margin-top: 10px;
+}
+
+button {
+  background: #8e24aa;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #b23be0;
+}
+
+.voltar {
+  margin-bottom: 20px;
+}
+
+#pesquisa {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+/* ESTADOS */
+
+.estado-recebido {
+  background: gray;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.estado-diagnostico {
+  background: #3498db;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.estado-reparacao {
+  background: #f1c40f;
+  color: black;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.estado-pecas {
+  background: orange;
+  color: black;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.estado-concluido {
+  background: #2ecc71;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.estado-entregue {
+  background: #27ae60;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.estado-cancelado {
+  background: #e74c3c;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<header>Atualizar Estado da Reparação</header>
+
+<div class="container">
+
+  <button class="voltar" onclick="window.location.href='funcionario.html'">
+    Voltar
+  </button>
+
+  <input 
+    type="text" 
+    id="pesquisa" 
+    placeholder="Pesquisar equipamento..."
+  >
+
+  <div id="listaReparacoes"></div>
+
+</div>
+
+<script type="module">
+
+import { supabase } from './js/supabaseClient.js'
+import { checkUser } from './js/auth.js'
+
+checkUser("funcionario")
+
+const lista = document.getElementById("listaReparacoes")
+const pesquisa = document.getElementById("pesquisa")
+
+async function carregarReparacoes(textoPesquisa = "") {
+
+  const { data, error } = await supabase
+    .from("reparacoes")
+    .select("*")
+    .order("data_entrada", { ascending: false })
+
+  if (error) {
+    console.error(error)
+    lista.innerHTML = "<p>Erro ao carregar reparações.</p>"
+    return
+  }
+
+  lista.innerHTML = ""
+
+  data.forEach(rep => {
+
+    const nomeEquipamento = (rep.equipamento || "").toLowerCase()
+
+    if (!nomeEquipamento.includes(textoPesquisa.toLowerCase())) {
+      return
+    }
+
+    lista.innerHTML += `
+      <div class="card">
+
+        <h3>${rep.equipamento || "Equipamento sem nome"}</h3>
+
+        <p><strong>Marca:</strong> ${rep.marca || "Sem marca"}</p>
+
+        <p><strong>Modelo:</strong> ${rep.modelo || "Sem modelo"}</p>
+
+        <p><strong>Problema:</strong> ${rep.problema || "Sem descrição"}</p>
+
+        <p>
+          <strong>Estado atual:</strong>
+
+          <span class="
+            ${rep.estado === 'Recebido' ? 'estado-recebido' : ''}
+            ${rep.estado === 'Em diagnóstico' ? 'estado-diagnostico' : ''}
+            ${rep.estado === 'Em reparação' ? 'estado-reparacao' : ''}
+            ${rep.estado === 'A aguardar peças' ? 'estado-pecas' : ''}
+            ${rep.estado === 'Concluído' ? 'estado-concluido' : ''}
+            ${rep.estado === 'Entregue' ? 'estado-entregue' : ''}
+            ${rep.estado === 'Cancelado' ? 'estado-cancelado' : ''}
+          ">
+            ${rep.estado || "Sem estado"}
+          </span>
+        </p>
+
+        <select id="estado-${rep.id}">
+
+          <option value="Recebido"
+            ${rep.estado === "Recebido" ? "selected" : ""}>
+            Recebido
+          </option>
+
+          <option value="Em diagnóstico"
+            ${rep.estado === "Em diagnóstico" ? "selected" : ""}>
+            Em diagnóstico
+          </option>
+
+          <option value="Em reparação"
+            ${rep.estado === "Em reparação" ? "selected" : ""}>
+            Em reparação
+          </option>
+
+          <option value="A aguardar peças"
+            ${rep.estado === "A aguardar peças" ? "selected" : ""}>
+            A aguardar peças
+          </option>
+
+          <option value="Concluído"
+            ${rep.estado === "Concluído" ? "selected" : ""}>
+            Concluído
+          </option>
+
+          <option value="Entregue"
+            ${rep.estado === "Entregue" ? "selected" : ""}>
+            Entregue
+          </option>
+
+          <option value="Cancelado"
+            ${rep.estado === "Cancelado" ? "selected" : ""}>
+            Cancelado
+          </option>
+
+        </select>
+
+        <br><br>
+
+        <button onclick="atualizarEstado('${rep.id}')">
+          Atualizar Estado
+        </button>
+
+      </div>
+    `
+  })
+}
+
+window.atualizarEstado = async function(id) {
+
+  const novoEstado = document.getElementById(`estado-${id}`).value
+
+  const { error } = await supabase
+    .from("reparacoes")
+    .update({ estado: novoEstado })
+    .eq("id", id)
+
+  if (error) {
+    console.error(error)
+    alert("Erro ao atualizar estado.")
+    return
+  }
+
+  alert("Estado atualizado com sucesso!")
+
+  carregarReparacoes(pesquisa.value)
+}
+
+pesquisa.addEventListener("input", () => {
+  carregarReparacoes(pesquisa.value)
+})
+
+carregarReparacoes()
+
+</script>
+
+</body>
+</html>

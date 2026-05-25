@@ -1,4 +1,4 @@
-import { supabase } from './js/supabaseClient.js'
+import { supabase } from './supabaseClient.js'
 
 export async function addLog(acao, utilizador, detalhes = "") {
 
