@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Suporte - TechFix</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #12041c, #2b0a3d, #5d1896);
+  color: white;
+  padding: 30px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 35px;
+}
+
+.logo {
+  font-size: 45px;
+  font-weight: bold;
+  color: #d8b4fe;
+}
+
+.subtitulo {
+  color: #d1c4e9;
+  margin-top: 8px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+}
+
+.topo {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+button, input, select, textarea {
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: none;
+  font-size: 15px;
+}
+
+button {
+  background: #9333ea;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #a855f7;
+}
+
+input, select, textarea {
+  background: rgba(255,255,255,0.08);
+  color: white;
+  outline: none;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+input {
+  flex: 1;
+  min-width: 240px;
+}
+
+option {
+  color: black;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+}
+
+.card h3 {
+  color: #f3e8ff;
+  margin-bottom: 12px;
+}
+
+.card p {
+  color: #ddd6fe;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.estado {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: bold;
+  margin: 8px 0;
+}
+
+.aberto {
+  background: #e74c3c;
+}
+
+.analise {
+  background: #f1c40f;
+  color: black;
+}
+
+.resolvido {
+  background: #2ecc71;
+}
+
+.acoes {
+  margin-top: 15px;
+  display: grid;
+  gap: 10px;
+}
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.vazio {
+  text-align: center;
+  padding: 30px;
+  color: #d1c4e9;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">TechFix</div>
+  <div class="subtitulo">Pedidos de Suporte</div>
+</header>
+
+<div class="container">
+
+  <div class="topo">
+    <button onclick="window.location.href='funcionario.html'">Voltar</button>
+    <input type="text" id="pesquisa" placeholder="Pesquisar assunto ou mensagem...">
+
+    <select id="filtroEstado">
+      <option value="">Todos</option>
+      <option value="Aberto">Aberto</option>
+      <option value="Em análise">Em análise</option>
+      <option value="Resolvido">Resolvido</option>
+    </select>
+  </div>
+
+  <div class="grid" id="listaSuporte"></div>
+
+</div>
+
+<script type="module">
+import { supabase } from './js/supabaseClient.js'
+import { checkUser } from './js/auth.js'
+
+checkUser("funcionario")
+
+const lista = document.getElementById("listaSuporte")
+const pesquisa = document.getElementById("pesquisa")
+const filtroEstado = document.getElementById("filtroEstado")
+
+let pedidos = []
+
+function classeEstado(estado) {
+  if (estado === "Aberto") return "aberto"
+  if (estado === "Em análise") return "analise"
+  if (estado === "Resolvido") return "resolvido"
+  return "aberto"
+}
+
+async function carregarSuporte() {
+  const { data, error } = await supabase
+    .from("suporte")
+    .select("*")
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error(error)
+    lista.innerHTML = "<p class='vazio'>Erro ao carregar pedidos de suporte.</p>"
+    return
+  }
+
+  pedidos = data || []
+  mostrarPedidos(pedidos)
+}
+
+function mostrarPedidos(dados) {
+  lista.innerHTML = ""
+
+  if (dados.length === 0) {
+    lista.innerHTML = "<p class='vazio'>Nenhum pedido de suporte encontrado.</p>"
+    return
+  }
+
+  dados.forEach(pedido => {
+    lista.innerHTML += `
+      <div class="card">
+        <h3>${pedido.assunto || "Sem assunto"}</h3>
+
+        <p><strong>Mensagem:</strong></p>
+        <p>${pedido.mensagem || "Sem mensagem"}</p>
+
+        <p><strong>Data:</strong> ${pedido.created_at || "-"}</p>
+
+        <span class="estado ${classeEstado(pedido.estado)}">
+          ${pedido.estado || "Aberto"}
+        </span>
+
+        <div class="acoes">
+          <select id="estado-${pedido.id}">
+            <option value="Aberto" ${pedido.estado === "Aberto" ? "selected" : ""}>Aberto</option>
+            <option value="Em análise" ${pedido.estado === "Em análise" ? "selected" : ""}>Em análise</option>
+            <option value="Resolvido" ${pedido.estado === "Resolvido" ? "selected" : ""}>Resolvido</option>
+          </select>
+
+          <textarea id="resposta-${pedido.id}" placeholder="Resposta ao cliente...">${pedido.resposta || ""}</textarea>
+
+          <button onclick="atualizarPedido('${pedido.id}')">
+            Guardar
+          </button>
+        </div>
+      </div>
+    `
+  })
+}
+
+window.atualizarPedido = async function(id) {
+  const estado = document.getElementById(`estado-${id}`).value
+  const resposta = document.getElementById(`resposta-${id}`).value.trim()
+
+  const { error } = await supabase
+    .from("suporte")
+    .update({
+      estado: estado,
+      resposta: resposta
+    })
+    .eq("id", id)
+
+  if (error) {
+    console.error(error)
+    alert("Erro ao atualizar pedido.")
+    return
+  }
+
+  alert("Pedido atualizado com sucesso!")
+  carregarSuporte()
+}
+
+function aplicarFiltros() {
+  const texto = pesquisa.value.toLowerCase()
+  const estado = filtroEstado.value
+
+  const filtrados = pedidos.filter(pedido => {
+    const conteudo = `${pedido.assunto || ""} ${pedido.mensagem || ""}`.toLowerCase()
+    const passaTexto = conteudo.includes(texto)
+    const passaEstado = !estado || pedido.estado === estado
+
+    return passaTexto && passaEstado
+  })
+
+  mostrarPedidos(filtrados)
+}
+
+pesquisa.addEventListener("input", aplicarFiltros)
+filtroEstado.addEventListener("change", aplicarFiltros)
+
+carregarSuporte()
+</script>
+
+</body>
+</html>

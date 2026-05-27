@@ -25,8 +25,9 @@ body{
   background-position:center;
   display:flex;
   justify-content:center;
-  align-items:center;
+  align-items:flex-start;
   color:white;
+  padding:30px 0;
 }
 
 .container{
@@ -77,15 +78,75 @@ button{
   font-size:16px;
   cursor:pointer;
   transition:0.3s;
+  margin-bottom:12px;
 }
 
 button:hover{
   background:#a855f7;
 }
 
+.btn-voltar{
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.2);
+}
+
 .status{
-  margin-top:20px;
+  margin-top:10px;
   text-align:center;
+  margin-bottom:25px;
+}
+
+.historico-titulo{
+  margin-top:25px;
+  margin-bottom:15px;
+  color:#d8b4fe;
+  font-size:22px;
+}
+
+.pedido{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:15px;
+  padding:18px;
+  margin-bottom:15px;
+}
+
+.pedido h3{
+  color:#f3e8ff;
+  margin-bottom:10px;
+}
+
+.pedido p{
+  margin-bottom:8px;
+  line-height:1.5;
+  color:#ddd6fe;
+}
+
+.estado{
+  display:inline-block;
+  padding:5px 12px;
+  border-radius:20px;
+  font-size:13px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.aberto{
+  background:#e74c3c;
+}
+
+.analise{
+  background:#f1c40f;
+  color:black;
+}
+
+.resolvido{
+  background:#2ecc71;
+}
+
+.sem-resposta{
+  color:#c4b5fd;
+  font-style:italic;
 }
 
 </style>
@@ -106,34 +167,107 @@ button:hover{
     Enviar Mensagem
   </button>
 
+  <button class="btn-voltar" onclick="window.location.href='cliente.html'">
+    Voltar
+  </button>
+
   <div class="status" id="status"></div>
+
+  <h2 class="historico-titulo">As tuas mensagens</h2>
+
+  <div id="listaMensagens"></div>
 
 </div>
 
 <script type="module">
-import { supabase } from "./supabaseClient.js"
-import { checkUser } from "./auth.js"
+import { supabase } from "./js/supabaseClient.js"
+import { checkUser } from "./js/auth.js"
 
 checkUser("cliente")
 
-document.getElementById("btnEnviar").addEventListener("click", async () => {
-  const assunto = document.getElementById("assunto").value.trim()
-  const mensagem = document.getElementById("mensagem").value.trim()
-  const status = document.getElementById("status")
+const assuntoInput = document.getElementById("assunto")
+const mensagemInput = document.getElementById("mensagem")
+const statusDiv = document.getElementById("status")
+const listaMensagens = document.getElementById("listaMensagens")
 
-  if (!assunto || !mensagem) {
-    status.innerHTML = "Preenche todos os campos."
-    return
-  }
+function classeEstado(estado) {
+  if (estado === "Aberto" || estado === "aberto") return "aberto"
+  if (estado === "Em análise" || estado === "em análise") return "analise"
+  if (estado === "Resolvido" || estado === "resolvido") return "resolvido"
 
+  return "aberto"
+}
+
+async function obterUser() {
   const { data: sessionData } = await supabase.auth.getSession()
 
   if (!sessionData.session) {
     window.location.href = "login.html"
+    return null
+  }
+
+  return sessionData.session.user
+}
+
+async function carregarMensagens() {
+  const user = await obterUser()
+
+  if (!user) return
+
+  const { data, error } = await supabase
+    .from("suporte")
+    .select("*")
+    .eq("cliente_id", user.id)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error(error)
+    listaMensagens.innerHTML = "<p>Erro ao carregar mensagens.</p>"
     return
   }
 
-  const user = sessionData.session.user
+  listaMensagens.innerHTML = ""
+
+  if (!data || data.length === 0) {
+    listaMensagens.innerHTML = "<p>Ainda não enviaste nenhuma mensagem.</p>"
+    return
+  }
+
+  data.forEach(pedido => {
+    listaMensagens.innerHTML += `
+      <div class="pedido">
+        <h3>${pedido.assunto || "Sem assunto"}</h3>
+
+        <span class="estado ${classeEstado(pedido.estado)}">
+          ${pedido.estado || "Aberto"}
+        </span>
+
+        <p><strong>A tua mensagem:</strong></p>
+        <p>${pedido.mensagem || "Sem mensagem"}</p>
+
+        <p><strong>Resposta da TechFix:</strong></p>
+        <p class="${pedido.resposta ? "" : "sem-resposta"}">
+          ${pedido.resposta || "Ainda sem resposta."}
+        </p>
+
+        <p><strong>Data:</strong> ${pedido.created_at || "-"}</p>
+      </div>
+    `
+  })
+}
+
+document.getElementById("btnEnviar").addEventListener("click", async () => {
+  const assunto = assuntoInput.value.trim()
+  const mensagem = mensagemInput.value.trim()
+
+  if (!assunto || !mensagem) {
+    statusDiv.innerHTML = "Preenche todos os campos."
+    return
+  }
+
+  const user = await obterUser()
+
+  if (!user) return
 
   const { error } = await supabase
     .from("suporte")
@@ -142,21 +276,25 @@ document.getElementById("btnEnviar").addEventListener("click", async () => {
         cliente_id: user.id,
         assunto: assunto,
         mensagem: mensagem,
-        estado: "aberto"
+        estado: "Aberto"
       }
     ])
 
   if (error) {
-    status.innerHTML = "Erro ao enviar mensagem."
+    statusDiv.innerHTML = "Erro ao enviar mensagem."
     console.error(error)
     return
   }
 
-  status.innerHTML = "Mensagem enviada com sucesso."
+  statusDiv.innerHTML = "Mensagem enviada com sucesso."
 
-  document.getElementById("assunto").value = ""
-  document.getElementById("mensagem").value = ""
+  assuntoInput.value = ""
+  mensagemInput.value = ""
+
+  carregarMensagens()
 })
+
+carregarMensagens()
 </script>
 
 </body>
