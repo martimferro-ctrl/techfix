@@ -6,7 +6,6 @@
 <title>TechFix - Gerir Utilizadores</title>
 
 <style>
-
 *{
   margin:0;
   padding:0;
@@ -32,6 +31,46 @@ h1{
   font-size:32px;
 }
 
+.card{
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(10px);
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 12px 30px rgba(0,0,0,0.3);
+  padding:20px;
+  margin-bottom:20px;
+}
+
+.card h2{
+  margin-bottom:15px;
+  font-size:22px;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+  gap:15px;
+}
+
+input, select{
+  width:100%;
+  padding:12px 15px;
+  border:none;
+  border-radius:12px;
+  background:rgba(255,255,255,0.08);
+  color:white;
+  outline:none;
+  border:1px solid rgba(255,255,255,0.08);
+}
+
+input::placeholder{
+  color:rgba(255,255,255,0.6);
+}
+
+option{
+  color:black;
+}
+
 .topbar{
   display:flex;
   justify-content:space-between;
@@ -44,21 +83,6 @@ h1{
 .search{
   flex:1;
   min-width:250px;
-}
-
-.search input{
-  width:100%;
-  padding:12px 15px;
-  border:none;
-  border-radius:12px;
-  background:rgba(255,255,255,0.08);
-  color:white;
-  outline:none;
-  border:1px solid rgba(255,255,255,0.08);
-}
-
-.search input::placeholder{
-  color:rgba(255,255,255,0.6);
 }
 
 .table-wrapper{
@@ -93,19 +117,6 @@ tr:hover{
   background:rgba(255,255,255,0.03);
 }
 
-select{
-  padding:8px 10px;
-  border:none;
-  border-radius:10px;
-  background:rgba(255,255,255,0.08);
-  color:white;
-  outline:none;
-}
-
-option{
-  color:black;
-}
-
 button{
   padding:9px 14px;
   border:none;
@@ -119,6 +130,12 @@ button:hover{
   transform:translateY(-1px);
 }
 
+.create{
+  background:#8b5cf6;
+  color:white;
+  margin-top:15px;
+}
+
 .delete{
   background:#ff4d6d;
   color:white;
@@ -129,13 +146,29 @@ button:hover{
   color:white;
 }
 
-#status{
+.back{
+  background:rgba(255,255,255,0.12);
+  color:white;
+  margin-top:20px;
+}
+
+#status,
+#createStatus{
   margin-bottom:15px;
-  opacity:0.8;
+  opacity:0.9;
+}
+
+.sucesso{
+  color:#bbf7d0;
+  margin-top:12px;
+}
+
+.erro{
+  color:#fecaca;
+  margin-top:12px;
 }
 
 @media(max-width:900px){
-
   .table-wrapper{
     overflow-x:auto;
   }
@@ -143,9 +176,7 @@ button:hover{
   table{
     min-width:800px;
   }
-
 }
-
 </style>
 </head>
 
@@ -155,18 +186,35 @@ button:hover{
 
 <h1>Gerir Utilizadores</h1>
 
-<div class="topbar">
+<div class="card">
+  <h2>Criar novo utilizador</h2>
 
+  <div class="form-grid">
+    <input type="email" id="newEmail" placeholder="Email do utilizador">
+
+    <input type="password" id="newPassword" placeholder="Password">
+
+    <select id="newRole">
+      <option value="cliente">cliente</option>
+      <option value="funcionario">funcionário</option>
+      <option value="admin">admin</option>
+    </select>
+  </div>
+
+  <button class="create" onclick="createUser()">Criar utilizador</button>
+
+  <p id="createStatus"></p>
+</div>
+
+<div class="topbar">
   <div class="search">
     <input type="text" id="searchInput" placeholder="Pesquisar utilizador...">
   </div>
-
 </div>
 
 <div id="status">A carregar...</div>
 
 <div class="table-wrapper">
-
 <table>
   <thead>
     <tr>
@@ -178,28 +226,32 @@ button:hover{
 
   <tbody id="users"></tbody>
 </table>
-
 </div>
+
+<button class="back" onclick="window.location.href='admin.html'">
+  Voltar ao painel
+</button>
 
 </div>
 
 <script type="module">
-
 import { supabase } from "./js/supabaseClient.js";
 
 const table = document.getElementById("users");
 const status = document.getElementById("status");
+const createStatus = document.getElementById("createStatus");
 const searchInput = document.getElementById("searchInput");
 
 let usersData = [];
 
 async function loadUsers() {
-
+  status.style.display = "block";
   status.textContent = "A carregar utilizadores...";
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, role");
+    .select("id, email, role")
+    .order("email", { ascending: true });
 
   if (error) {
     console.error(error);
@@ -207,26 +259,31 @@ async function loadUsers() {
     return;
   }
 
-  usersData = data;
+  usersData = data || [];
   renderUsers(usersData);
 
   status.style.display = "none";
 }
 
 function renderUsers(users){
+  if (!users.length) {
+    table.innerHTML = `
+      <tr>
+        <td colspan="3">Nenhum utilizador encontrado.</td>
+      </tr>
+    `;
+    return;
+  }
 
   table.innerHTML = users.map(user => `
     <tr>
-
-      <td>${user.email}</td>
+      <td>${user.email || "Sem email"}</td>
 
       <td>
         <select id="role-${user.id}">
           <option value="cliente" ${user.role === "cliente" ? "selected" : ""}>cliente</option>
-
-          <option value="admin" ${user.role === "admin" ? "selected" : ""}>admin</option>
-
           <option value="funcionario" ${user.role === "funcionario" ? "selected" : ""}>funcionário</option>
+          <option value="admin" ${user.role === "admin" ? "selected" : ""}>admin</option>
         </select>
       </td>
 
@@ -239,26 +296,86 @@ function renderUsers(users){
           Eliminar
         </button>
       </td>
-
     </tr>
   `).join("");
-
 }
 
 searchInput.addEventListener("input", () => {
-
   const value = searchInput.value.toLowerCase();
 
   const filtered = usersData.filter(user =>
-    user.email.toLowerCase().includes(value)
+    (user.email || "").toLowerCase().includes(value)
   );
 
   renderUsers(filtered);
-
 });
 
-window.updateRole = async function(id) {
+window.createUser = async function() {
+  const email = document.getElementById("newEmail").value.trim();
+  const password = document.getElementById("newPassword").value.trim();
+  const role = document.getElementById("newRole").value;
 
+  createStatus.textContent = "";
+  createStatus.className = "";
+
+  if (!email || !password || !role) {
+    createStatus.textContent = "Preenche todos os campos.";
+    createStatus.className = "erro";
+    return;
+  }
+
+  if (password.length < 6) {
+    createStatus.textContent = "A password deve ter pelo menos 6 caracteres.";
+    createStatus.className = "erro";
+    return;
+  }
+
+  const { data, error } = await supabase.auth.signUp({
+    email: email,
+    password: password
+  });
+
+  if (error) {
+    console.error(error);
+    createStatus.textContent = "Erro ao criar utilizador: " + error.message;
+    createStatus.className = "erro";
+    return;
+  }
+
+  const userId = data.user?.id;
+
+  if (!userId) {
+    createStatus.textContent = "Utilizador criado, mas confirma o email antes de aparecer na lista.";
+    createStatus.className = "sucesso";
+    return;
+  }
+
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .upsert({
+      id: userId,
+      email: email,
+      role: role
+    });
+
+  if (profileError) {
+    console.error(profileError);
+    createStatus.textContent = "Utilizador criado, mas houve erro ao guardar a role.";
+    createStatus.className = "erro";
+    return;
+  }
+
+  document.getElementById("newEmail").value = "";
+  document.getElementById("newPassword").value = "";
+  document.getElementById("newRole").value = "cliente";
+
+  createStatus.textContent = "Utilizador criado com sucesso.";
+  createStatus.className = "sucesso";
+
+  loadUsers();
+};
+
+window.updateRole = async function(id) {
   const newRole = document.getElementById(`role-${id}`).value;
 
   const { error } = await supabase
@@ -273,11 +390,10 @@ window.updateRole = async function(id) {
   }
 
   alert("Role atualizada!");
-
+  loadUsers();
 };
 
 window.deleteUser = async function(id) {
-
   const confirmDelete = confirm("Tens a certeza que queres eliminar este utilizador?");
 
   if (!confirmDelete) return;
@@ -293,14 +409,13 @@ window.deleteUser = async function(id) {
     return;
   }
 
-  alert("Utilizador eliminado!");
+  alert("Utilizador eliminado da tabela profiles.");
 
   loadUsers();
-
 };
 
 loadUsers();
-
 </script>
+
 </body>
 </html>

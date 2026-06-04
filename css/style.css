@@ -1,0 +1,27 @@
+.tabela-pecas{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+
+.tabela-pecas th,
+.tabela-pecas td{
+  padding:14px;
+  border-bottom:1px solid rgba(255,255,255,0.12);
+  text-align:left;
+}
+
+.tabela-pecas th{
+  background:rgba(0,0,0,0.25);
+  color:#f3e8ff;
+}
+
+.tabela-pecas tr:hover{
+  background:rgba(255,255,255,0.04);
+}
+
+.nota{
+  margin-top:12px;
+  color:#d1c4e9;
+  font-size:14px;
+}

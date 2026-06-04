@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TechFix - Reparação Atual</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+
+body{
+  min-height:100vh;
+  background:linear-gradient(135deg,#12041c,#2b0a3d,#5d1896);
+  color:white;
+}
+
+header{text-align:center;padding:40px 20px 20px}
+.logo{font-size:46px;font-weight:bold;color:#d8b4fe}
+.subtitulo{margin-top:8px;color:#d1c4e9;font-size:18px}
+
+.container{
+  max-width:1000px;
+  margin:30px auto;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+
+.card{
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.1);
+  backdrop-filter:blur(10px);
+  border-radius:20px;
+  padding:25px;
+  box-shadow:0 15px 30px rgba(0,0,0,0.25);
+}
+
+.card h2{margin-bottom:15px;color:#f3e8ff}
+
+input,textarea{
+  width:100%;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:12px;
+  padding:14px;
+  color:white;
+  font-size:15px;
+  outline:none;
+  margin-top:10px;
+}
+
+textarea{min-height:150px;resize:vertical}
+
+input::placeholder,textarea::placeholder{color:#c4b5fd}
+
+button{
+  margin-top:15px;
+  padding:12px 20px;
+  border:none;
+  border-radius:10px;
+  background:#8b5cf6;
+  color:white;
+  cursor:pointer;
+  font-size:15px;
+  transition:0.3s;
+}
+
+button:hover{background:#a855f7}
+
+.concluir{background:#16a34a}
+.concluir:hover{background:#22c55e}
+
+.fatura{background:#2563eb}
+.fatura:hover{background:#3b82f6}
+
+.voltar{background:rgba(255,255,255,0.12)}
+
+.info{margin-bottom:10px;color:#d1c4e9}
+ul{padding-left:20px}
+li{margin-bottom:10px;color:#d1c4e9}
+.hidden{display:none}
+.erro{color:#fecaca;margin-top:10px}
+.sucesso{color:#bbf7d0;margin-top:10px}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:15px;
+}
+
+.total{
+  font-size:22px;
+  color:#bbf7d0;
+  margin-top:15px;
+  font-weight:bold;
+}
+
+@media print{
+  body *{visibility:hidden}
+  #faturaPrint, #faturaPrint *{visibility:visible}
+  #faturaPrint{
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    color:black;
+    background:white;
+    padding:30px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">TechFix</div>
+  <div class="subtitulo">Reparação Atual</div>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Pesquisar reparação</h2>
+    <p>Escreve o código da reparação para veres os dados.</p>
+
+    <input type="text" id="codigoReparacao" placeholder="Exemplo: TFX-001">
+
+    <button onclick="pesquisarReparacao()">Pesquisar</button>
+
+    <p id="mensagemPesquisa"></p>
+  </div>
+
+  <div class="card hidden" id="cardReparacao">
+    <h2>Informações da Reparação</h2>
+
+    <div class="info"><strong>Código:</strong> <span id="codigo"></span></div>
+    <div class="info"><strong>Equipamento:</strong> <span id="equipamento"></span></div>
+    <div class="info"><strong>Marca:</strong> <span id="marca"></span></div>
+    <div class="info"><strong>Modelo:</strong> <span id="modelo"></span></div>
+    <div class="info"><strong>Problema/Avaria:</strong> <span id="problema"></span></div>
+    <div class="info"><strong>Diagnóstico:</strong> <span id="diagnostico"></span></div>
+    <div class="info"><strong>Estado:</strong> <span id="estado"></span></div>
+    <div class="info"><strong>Prioridade:</strong> <span id="prioridade"></span></div>
+  </div>
+
+  <div class="card hidden" id="cardDicas">
+    <h2>Dicas para esta avaria</h2>
+    <ul id="listaDicas"></ul>
+  </div>
+
+  <div class="card hidden" id="cardApontamentos">
+    <h2>Apontamentos do Funcionário</h2>
+
+    <textarea id="apontamentos" placeholder="Testes feitos, peças verificadas, observações ou possíveis soluções..."></textarea>
+
+    <button onclick="guardarApontamentos()">Guardar apontamentos</button>
+
+    <p id="mensagemGuardar"></p>
+  </div>
+
+  <div class="card hidden" id="cardConclusao">
+    <h2>Conclusão da Reparação</h2>
+
+    <textarea id="trabalhoExecutado" placeholder="Descreve o trabalho executado..."></textarea>
+
+    <textarea id="pecasUtilizadas" placeholder="Peças substituídas/gastas. Exemplo: SSD 500GB, pasta térmica, bateria..."></textarea>
+
+    <div class="grid">
+      <input type="number" id="valorPecas" placeholder="Valor das peças (€)" oninput="calcularTotal()">
+      <input type="number" id="valorMaoObra" placeholder="Valor da mão de obra (€)" oninput="calcularTotal()">
+    </div>
+
+    <div class="total">
+      Total: <span id="valorTotal">0.00</span> €
+    </div>
+
+    <button class="concluir" onclick="concluirReparacao()">Concluir reparação</button>
+    <button class="fatura" onclick="gerarFatura()">Gerar / imprimir fatura</button>
+
+    <p id="mensagemConclusao"></p>
+  </div>
+
+  <div id="faturaPrint" class="hidden">
+    <h1>TechFix</h1>
+    <h2>Fatura de Reparação</h2>
+    <hr><br>
+
+    <p><strong>Número:</strong> <span id="faturaNumero"></span></p>
+    <p><strong>Data:</strong> <span id="faturaData"></span></p>
+    <p><strong>Código da Reparação:</strong> <span id="faturaCodigo"></span></p>
+
+    <br>
+    <h3>Equipamento</h3>
+    <p><strong>Equipamento:</strong> <span id="faturaEquipamento"></span></p>
+    <p><strong>Marca:</strong> <span id="faturaMarca"></span></p>
+    <p><strong>Modelo:</strong> <span id="faturaModelo"></span></p>
+
+    <br>
+    <h3>Problema / Trabalho</h3>
+    <p><strong>Problema:</strong> <span id="faturaProblema"></span></p>
+    <p><strong>Trabalho executado:</strong> <span id="faturaTrabalho"></span></p>
+    <p><strong>Peças utilizadas:</strong> <span id="faturaPecas"></span></p>
+
+    <br>
+    <h3>Valores</h3>
+    <p><strong>Peças:</strong> <span id="faturaValorPecas"></span> €</p>
+    <p><strong>Mão de obra:</strong> <span id="faturaValorMaoObra"></span> €</p>
+    <h2>Total: <span id="faturaTotal"></span> €</h2>
+
+    <br><br>
+    <p>Obrigado por escolher a TechFix.</p>
+  </div>
+
+  <button class="voltar" onclick="window.location.href='funcionario.html'">
+    Voltar ao painel
+  </button>
+
+</div>
+
+<script type="module">
+import { checkUser } from './js/auth.js'
+import { supabase } from './js/supabaseClient.js'
+
+checkUser("funcionario")
+
+let reparacaoAtualId = null
+let reparacaoAtual = null
+
+async function pesquisarReparacao() {
+  const codigo = document.getElementById("codigoReparacao").value.trim()
+  const mensagem = document.getElementById("mensagemPesquisa")
+
+  mensagem.textContent = ""
+  mensagem.className = ""
+
+  if (codigo === "") {
+    mensagem.textContent = "Escreve o código da reparação."
+    mensagem.className = "erro"
+    return
+  }
+
+  const { data, error } = await supabase
+    .from("reparacoes")
+    .select("*")
+    .eq("codigo", codigo)
+    .maybeSingle()
+
+  if (error) {
+    console.log(error)
+    mensagem.textContent = "Erro ao pesquisar a reparação."
+    mensagem.className = "erro"
+    esconderCards()
+    return
+  }
+
+  if (!data) {
+    mensagem.textContent = "Nenhuma reparação encontrada com esse código."
+    mensagem.className = "erro"
+    esconderCards()
+    return
+  }
+
+  reparacaoAtualId = data.id
+  reparacaoAtual = data
+
+  document.getElementById("codigo").textContent = data.codigo || "Sem código"
+  document.getElementById("equipamento").textContent = data.equipamento || "Sem informação"
+  document.getElementById("marca").textContent = data.marca || "Sem informação"
+  document.getElementById("modelo").textContent = data.modelo || "Sem informação"
+  document.getElementById("problema").textContent = data.problema || "Sem informação"
+  document.getElementById("diagnostico").textContent = data.diagnostico || "Sem informação"
+  document.getElementById("estado").textContent = data.estado || "Sem informação"
+  document.getElementById("prioridade").textContent = data.prioridade || "Sem informação"
+
+  document.getElementById("apontamentos").value = data.apontamentos_funcionario || ""
+  document.getElementById("trabalhoExecutado").value = data.trabalho_executado || ""
+  document.getElementById("pecasUtilizadas").value = data.pecas_utilizadas || ""
+  document.getElementById("valorPecas").value = data.valor_pecas || ""
+  document.getElementById("valorMaoObra").value = data.valor_mao_obra || ""
+
+  calcularTotal()
+  mostrarDicas(data.problema || "")
+
+  document.getElementById("cardReparacao").classList.remove("hidden")
+  document.getElementById("cardDicas").classList.remove("hidden")
+  document.getElementById("cardApontamentos").classList.remove("hidden")
+  document.getElementById("cardConclusao").classList.remove("hidden")
+
+  mensagem.textContent = "Reparação encontrada."
+  mensagem.className = "sucesso"
+}
+
+async function guardarApontamentos() {
+  const texto = document.getElementById("apontamentos").value.trim()
+  const mensagem = document.getElementById("mensagemGuardar")
+
+  mensagem.textContent = ""
+  mensagem.className = ""
+
+  if (!reparacaoAtualId) {
+    mensagem.textContent = "Primeiro pesquisa uma reparação."
+    mensagem.className = "erro"
+    return
+  }
+
+  const { error } = await supabase
+    .from("reparacoes")
+    .update({ apontamentos_funcionario: texto })
+    .eq("id", reparacaoAtualId)
+
+  if (error) {
+    console.log(error)
+    mensagem.textContent = "Erro ao guardar apontamentos."
+    mensagem.className = "erro"
+    return
+  }
+
+  mensagem.textContent = "Apontamentos guardados com sucesso."
+  mensagem.className = "sucesso"
+}
+
+function calcularTotal() {
+  const valorPecas = parseFloat(document.getElementById("valorPecas").value) || 0
+  const valorMaoObra = parseFloat(document.getElementById("valorMaoObra").value) || 0
+  const total = valorPecas + valorMaoObra
+
+  document.getElementById("valorTotal").textContent = total.toFixed(2)
+}
+
+async function concluirReparacao() {
+  const mensagem = document.getElementById("mensagemConclusao")
+
+  if (!reparacaoAtualId) {
+    mensagem.textContent = "Primeiro pesquisa uma reparação."
+    mensagem.className = "erro"
+    return
+  }
+
+  const trabalho = document.getElementById("trabalhoExecutado").value.trim()
+  const pecas = document.getElementById("pecasUtilizadas").value.trim()
+  const valorPecas = parseFloat(document.getElementById("valorPecas").value) || 0
+  const valorMaoObra = parseFloat(document.getElementById("valorMaoObra").value) || 0
+  const total = valorPecas + valorMaoObra
+
+  if (trabalho === "") {
+    mensagem.textContent = "Descreve o trabalho executado antes de concluir."
+    mensagem.className = "erro"
+    return
+  }
+
+  const { data, error } = await supabase
+    .from("reparacoes")
+    .update({
+      estado: "Concluída",
+      concluida: true,
+      trabalho_executado: trabalho,
+      pecas_utilizadas: pecas,
+      valor_pecas: valorPecas,
+      valor_mao_obra: valorMaoObra,
+      valor_total: total,
+      data_conclusao: new Date().toISOString()
+    })
+    .eq("id", reparacaoAtualId)
+    .select()
+    .single()
+
+  if (error) {
+    console.log(error)
+    mensagem.textContent = "Erro ao concluir reparação."
+    mensagem.className = "erro"
+    return
+  }
+
+  reparacaoAtual = data
+
+  document.getElementById("estado").textContent = "Concluída"
+
+  mensagem.textContent = "Reparação concluída com sucesso."
+  mensagem.className = "sucesso"
+}
+
+function gerarFatura() {
+  if (!reparacaoAtualId || !reparacaoAtual) {
+    alert("Primeiro pesquisa uma reparação.")
+    return
+  }
+
+  const trabalho = document.getElementById("trabalhoExecutado").value.trim()
+  const pecas = document.getElementById("pecasUtilizadas").value.trim()
+  const valorPecas = parseFloat(document.getElementById("valorPecas").value) || 0
+  const valorMaoObra = parseFloat(document.getElementById("valorMaoObra").value) || 0
+  const total = valorPecas + valorMaoObra
+
+  document.getElementById("faturaNumero").textContent = "FT-" + new Date().getFullYear() + "-" + reparacaoAtual.codigo
+  document.getElementById("faturaData").textContent = new Date().toLocaleDateString("pt-PT")
+  document.getElementById("faturaCodigo").textContent = reparacaoAtual.codigo || ""
+  document.getElementById("faturaEquipamento").textContent = reparacaoAtual.equipamento || ""
+  document.getElementById("faturaMarca").textContent = reparacaoAtual.marca || ""
+  document.getElementById("faturaModelo").textContent = reparacaoAtual.modelo || ""
+  document.getElementById("faturaProblema").textContent = reparacaoAtual.problema || ""
+  document.getElementById("faturaTrabalho").textContent = trabalho || "Sem descrição"
+  document.getElementById("faturaPecas").textContent = pecas || "Sem peças registadas"
+  document.getElementById("faturaValorPecas").textContent = valorPecas.toFixed(2)
+  document.getElementById("faturaValorMaoObra").textContent = valorMaoObra.toFixed(2)
+  document.getElementById("faturaTotal").textContent = total.toFixed(2)
+
+  document.getElementById("faturaPrint").classList.remove("hidden")
+
+  window.print()
+
+  document.getElementById("faturaPrint").classList.add("hidden")
+}
+
+function esconderCards() {
+  document.getElementById("cardReparacao").classList.add("hidden")
+  document.getElementById("cardDicas").classList.add("hidden")
+  document.getElementById("cardApontamentos").classList.add("hidden")
+  document.getElementById("cardConclusao").classList.add("hidden")
+}
+
+function mostrarDicas(problema) {
+  const lista = document.getElementById("listaDicas")
+  lista.innerHTML = ""
+
+  const texto = problema.toLowerCase()
+  let dicas = []
+
+  if (texto.includes("não liga") || texto.includes("nao liga") || texto.includes("não arranca") || texto.includes("nao arranca")) {
+    dicas = [
+      "Verificar carregador e cabo de alimentação.",
+      "Testar bateria ou fonte de alimentação.",
+      "Testar memória RAM individualmente.",
+      "Verificar sinais de curto-circuito na motherboard.",
+      "Confirmar se o equipamento recebe energia."
+    ]
+  } else if (texto.includes("sobreaquecimento") || texto.includes("aquece") || texto.includes("temperatura")) {
+    dicas = [
+      "Limpar ventoinhas e dissipadores.",
+      "Trocar pasta térmica.",
+      "Verificar temperaturas no BIOS ou software de diagnóstico.",
+      "Confirmar funcionamento da ventoinha.",
+      "Verificar se as entradas de ar estão obstruídas."
+    ]
+  } else if (texto.includes("lento") || texto.includes("lentidão") || texto.includes("travado") || texto.includes("bloqueia")) {
+    dicas = [
+      "Verificar utilização do disco.",
+      "Analisar programas no arranque.",
+      "Testar saúde do SSD/HDD.",
+      "Procurar malware ou vírus.",
+      "Verificar quantidade de RAM disponível."
+    ]
+  } else if (texto.includes("sem imagem") || texto.includes("ecrã") || texto.includes("ecra") || texto.includes("display")) {
+    dicas = [
+      "Testar com monitor externo.",
+      "Verificar cabo flat do display.",
+      "Testar memória RAM.",
+      "Confirmar funcionamento da gráfica/GPU.",
+      "Verificar backlight do ecrã."
+    ]
+  } else if (texto.includes("teclado") || texto.includes("tecla")) {
+    dicas = [
+      "Testar teclas individualmente.",
+      "Verificar cabo do teclado.",
+      "Limpar contactos.",
+      "Confirmar sinais de líquido ou oxidação.",
+      "Testar teclado externo."
+    ]
+  } else if (texto.includes("bateria") || texto.includes("não carrega") || texto.includes("nao carrega")) {
+    dicas = [
+      "Testar outro carregador compatível.",
+      "Verificar estado da bateria.",
+      "Confirmar se o conector de carga está danificado.",
+      "Verificar se há folga na entrada de carregamento.",
+      "Testar funcionamento ligado apenas ao carregador."
+    ]
+  } else if (texto.includes("internet") || texto.includes("wifi") || texto.includes("wi-fi") || texto.includes("rede")) {
+    dicas = [
+      "Verificar se o adaptador de rede está ativo.",
+      "Atualizar ou reinstalar drivers de rede.",
+      "Testar ligação por cabo de rede.",
+      "Confirmar se o problema acontece noutras redes.",
+      "Reiniciar configurações de rede."
+    ]
+  } else {
+    dicas = [
+      "Realizar diagnóstico completo ao equipamento.",
+      "Verificar alimentação, memória RAM, disco e temperaturas.",
+      "Registar todos os testes realizados.",
+      "Confirmar histórico da reparação.",
+      "Testar o equipamento por etapas."
+    ]
+  }
+
+  dicas.forEach(dica => {
+    const li = document.createElement("li")
+    li.textContent = dica
+    lista.appendChild(li)
+  })
+}
+
+window.pesquisarReparacao = pesquisarReparacao
+window.guardarApontamentos = guardarApontamentos
+window.calcularTotal = calcularTotal
+window.concluirReparacao = concluirReparacao
+window.gerarFatura = gerarFatura
+</script>
+
+</body>
+</html>
