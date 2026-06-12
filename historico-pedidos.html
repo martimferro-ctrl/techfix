@@ -8,19 +8,18 @@
 <title>TechFix - Histórico</title>
 
 <style>
-
 *{
   margin:0;
   padding:0;
   box-sizing:border-box;
-  font-family:Arial;
+  font-family:Arial, sans-serif;
 }
 
 body{
   min-height:100vh;
   background:
   linear-gradient(rgba(15,0,30,0.9), rgba(15,0,30,0.9)),
-  url("fundo-techfix.png");
+  url("./imagem/fundo-techfix.png");
   background-size:cover;
   background-position:center;
   padding:40px;
@@ -38,6 +37,7 @@ body{
 .sub{
   text-align:center;
   margin-bottom:40px;
+  color:#d1c4e9;
 }
 
 .lista{
@@ -54,11 +54,41 @@ body{
   border:1px solid rgba(255,255,255,0.08);
 }
 
+.card h2{
+  color:#d8b4fe;
+  margin-bottom:10px;
+}
+
+.card p{
+  margin:6px 0;
+}
+
 .estado{
   color:#c084fc;
   font-weight:bold;
 }
 
+.mensagem{
+  text-align:center;
+  color:#d1c4e9;
+  margin-top:30px;
+}
+
+.voltar{
+  display:block;
+  width:fit-content;
+  margin:0 auto 30px auto;
+  padding:10px 18px;
+  background:#7e22ce;
+  color:white;
+  text-decoration:none;
+  border-radius:8px;
+  transition:0.3s;
+}
+
+.voltar:hover{
+  background:#9333ea;
+}
 </style>
 </head>
 
@@ -67,55 +97,58 @@ body{
 <div class="logo">TechFix</div>
 <div class="sub">Histórico de Pedidos</div>
 
+<a href="cliente.html" class="voltar">Voltar ao painel</a>
+
 <div class="lista" id="lista"></div>
 
 <script type="module">
-import { supabase } from "./js/supabaseClient.js"
-import { checkUser } from "./js/auth.js"
+import { supabase } from "./js/supabaseClient.js";
+import { checkUser } from "./js/auth.js";
 
-checkUser("cliente")
+await checkUser("cliente");
 
 async function carregarHistorico() {
-  const { data: sessionData } = await supabase.auth.getSession()
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
-  if (!sessionData.session) {
-    window.location.href = "login.html"
-    return
+  if (sessionError || !sessionData.session) {
+    window.location.href = "login.html";
+    return;
   }
 
-  const user = sessionData.session.user
+  const user = sessionData.session.user;
 
   const { data, error } = await supabase
     .from("reparacoes")
     .select("*")
     .eq("cliente_id", user.id)
-    .order("created_at", { ascending: false })
+    .order("data_entrada", { ascending: false });
 
-  const lista = document.getElementById("lista")
+  const lista = document.getElementById("lista");
 
   if (error) {
-    lista.innerHTML = "<p>Erro ao carregar histórico.</p>"
-    console.error(error)
-    return
+    lista.innerHTML = "<p class='mensagem'>Erro ao carregar histórico.</p>";
+    console.error(error);
+    return;
   }
 
   if (!data || data.length === 0) {
-    lista.innerHTML = "<p>Ainda não tens reparações registadas.</p>"
-    return
+    lista.innerHTML = "<p class='mensagem'>Ainda não tens reparações registadas.</p>";
+    return;
   }
 
   lista.innerHTML = data.map(rep => `
     <div class="card">
-      <h2>${rep.equipamento || "Equipamento"}</h2>
+      <h2>${rep.codigo || "Sem código"} - ${rep.equipamento || "Equipamento"}</h2>
       <p><strong>Marca:</strong> ${rep.marca || "Não definido"}</p>
       <p><strong>Modelo:</strong> ${rep.modelo || "Não definido"}</p>
-      <p><strong>Estado:</strong> ${rep.estado || "Sem estado"}</p>
+      <p><strong>Estado:</strong> <span class="estado">${rep.estado || "Sem estado"}</span></p>
       <p><strong>Problema:</strong> ${rep.problema || "Sem descrição"}</p>
+      <p><strong>Data de entrada:</strong> ${rep.data_entrada || "Não definida"}</p>
     </div>
-  `).join("")
+  `).join("");
 }
 
-carregarHistorico()
+carregarHistorico();
 </script>
 
 </body>
